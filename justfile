@@ -13,6 +13,7 @@ done2 day:
     ./scripts/done_part2.sh {{day}}
 
 test:
+    clear
     cargo run --release
     cargo test --release
     cargo clippy
