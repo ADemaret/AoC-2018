@@ -51,7 +51,7 @@ fn get_answer(input: &str) -> Option<usize> {
             game_len -= 1;
         } else {
             current = (current + 1) % game_len + 1;
-            
+
             game_insert(&mut game_chunks, current, i);
             game_len += 1;
         }
@@ -72,7 +72,7 @@ fn get_answer(input: &str) -> Option<usize> {
     Some(*scores.iter().max().unwrap())
 }
 
-fn game_get_and_remove(game_chunks: &mut Vec<(usize, Vec<usize>)>, pos: usize) -> usize {
+fn game_get_and_remove(game_chunks: &mut [(usize, Vec<usize>)], pos: usize) -> usize {
     for gci in 0..game_chunks.len() {
         if pos >= game_chunks[gci].0
             && (gci == game_chunks.len() - 1 || pos < game_chunks[gci + 1].0)
@@ -98,7 +98,7 @@ fn game_insert(game_chunks: &mut Vec<(usize, Vec<usize>)>, pos: usize, marble: u
             && (gci == game_chunks.len() - 1 || pos < game_chunks[gci + 1].0)
         {
             let start_index = game_chunks[gci].0;
-            
+
             game_chunks[gci].1.insert(pos - start_index, marble);
 
             if game_chunks[gci].1.len() > max_len {
@@ -122,61 +122,39 @@ mod tests {
 
     #[test]
     fn test_part2() {
-        let mut game_chunks = vec![(0, vec![0, 1, 2]), (3, vec![3, 4, 5]), (6, vec![6, 7, 8])];
-        assert_eq!(game_get_and_remove(&mut game_chunks, 1), 1);
-        assert_eq!(game_get_and_remove(&mut game_chunks, 3), 4);
-        assert_eq!(game_get_and_remove(&mut game_chunks, 6), 8);
+        // to test with max-len = 4 at line 95
+        // let mut game_chunks = vec![(0, vec![0, 1, 2]), (3, vec![3, 4, 5]), (6, vec![6, 7, 8])];
+        // assert_eq!(game_get_and_remove(&mut game_chunks, 1), 1);
+        // assert_eq!(game_get_and_remove(&mut game_chunks, 3), 4);
+        // assert_eq!(game_get_and_remove(&mut game_chunks, 6), 8);
 
-        let mut game_chunks = vec![(0, vec![0, 1, 2]), (3, vec![3, 4, 5]), (6, vec![6, 7, 8])];
-        game_insert(&mut game_chunks, 3, 0);
-        assert_eq!(
-            game_chunks,
-            vec![
-                (0, vec![0, 1, 2]),
-                (3, vec![0, 3, 4, 5]),
-                (7, vec![6, 7, 8])
-            ]
-        );
-        game_insert(&mut game_chunks, 3, 0);
-        assert_eq!(
-            game_chunks,
-            vec![
-                (0, vec![0, 1, 2]),
-                (3, vec![0, 0]),
-                (5, vec![3, 4, 5]),
-                (8, vec![6, 7, 8])
-            ]
-        );
+        // let mut game_chunks = vec![(0, vec![0, 1, 2]), (3, vec![3, 4, 5]), (6, vec![6, 7, 8])];
+        // game_insert(&mut game_chunks, 3, 0);
+        // assert_eq!(
+        //     game_chunks,
+        //     vec![
+        //         (0, vec![0, 1, 2]),
+        //         (3, vec![0, 3, 4, 5]),
+        //         (7, vec![6, 7, 8])
+        //     ]
+        // );
+        // game_insert(&mut game_chunks, 3, 0);
+        // assert_eq!(
+        //     game_chunks,
+        //     vec![
+        //         (0, vec![0, 1, 2]),
+        //         (3, vec![0, 0]),
+        //         (5, vec![3, 4, 5]),
+        //         (8, vec![6, 7, 8])
+        //     ]
+        // );
     }
 
     #[test]
     fn test_total() {
-        // assert_eq!(
-        //     get_answer("9 players; last marble is worth 25 points"),
-        //     Some(32)
-        // );
-
-        // assert_eq!(
-        //     get_answer("10 players; last marble is worth 1618 points"),
-        //     Some(8317)
-        // );
-        // assert_eq!(
-        //     get_answer("13 players; last marble is worth 7999 points"),
-        //     Some(146373)
-        // );
-        // assert_eq!(
-        //     get_answer("17 players; last marble is worth 1104 points"),
-        //     Some(2764)
-        // );
-        // assert_eq!(
-        //     get_answer("21 players; last marble is worth 6111 points"),
-        //     Some(54718)
-        // );
-        // assert_eq!(
-        //     get_answer("30 players; last marble is worth 5807 points"),
-        //     Some(37305)
-        // );
-
-        assert_eq!(get_answer(include_str!("../assets/day09_input.txt")), None);
+        assert_eq!(
+            get_answer(include_str!("../assets/day09_input.txt")),
+            Some(3505711612)
+        );
     }
 }
