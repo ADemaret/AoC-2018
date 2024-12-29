@@ -9,8 +9,8 @@ pub fn main() {
     println!("-- Advent of Code - Day XX - Part 1 --");
     let now = Instant::now();
 
-    //let input = include_str!("../assets/dayXX_input_demo1.txt");
-    let input = include_str!("../assets/dayXX_input.txt");
+    let input = include_str!("../assets/dayXX_input_demo1.txt");
+    // let input = include_str!("../assets/dayXX_input.txt");
 
     if let Some(answer) = get_answer(input) {
         println!("The answer is : {}", answer);
