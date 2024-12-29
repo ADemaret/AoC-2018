@@ -33,6 +33,22 @@ impl Grid2D {
             Grid2D { max_l, max_c,grid}
         }
     
+    /// 
+    /// Crée une grille de max_l x max_c avec le char ch
+    /// 
+    pub fn new_empty(max_l:usize, max_c:usize,ch:char) -> Grid2D {
+        let mut grid = Vec::new();
+
+        for _ in 0..max_l {
+            let mut vec_l = Vec::new();
+            for _ in 0..max_c {
+                vec_l.push(ch);
+            }
+            grid.push(vec_l);        
+        }                
+        Grid2D { max_l, max_c,grid}
+    }
+
     ///
     /// Affiche la grille avec numéros de lignes et de colonnes
     /// 
@@ -103,7 +119,7 @@ impl Grid2D {
                     print!("  {}", ch);
                 }
             });
-            println!(" │");            
+            println!(" │");
         });
         
         // bord inférieur
@@ -112,7 +128,20 @@ impl Grid2D {
         println!("─┘");
     }
 
-    
+    ///
+    /// Renvoie le caractère à un point donné
+    /// 
+    pub fn get_at(&self,pt:(usize,usize)) -> char {
+        self.grid[pt.0][pt.1]
+    }
+
+    ///
+    /// Modifie le caractère à un point donné
+    /// 
+    pub fn set_at(&mut self,pt:(usize,usize),value:char) {
+        self.grid[pt.0][pt.1] = value;
+    }
+
     ///
     /// Renvoie le nombre d'occurence du caractère cc dans la grille
     ///
@@ -158,6 +187,21 @@ impl Grid2D {
     }
 
     ///
+    /// Renvoie la première occurence des coordonnées d'un caractère
+    ///
+    pub fn get_char_position( &self,cc: char ) -> Option<(usize,usize)> {
+
+        for l in 0..self.max_l {
+            for c in 0..self.max_c {
+                if self.get_at((l,c)).eq(&cc) {
+                    return Some((l,c));
+                }
+            }
+        }
+        None        
+    }
+
+    ///
     /// Renvoie un vecteur des caractères des 8 cases adjacentes
     /// (gauche, droite, haut, bas et diagonales)
     ///
@@ -172,6 +216,33 @@ impl Grid2D {
             (1, -1),
             (1, 0),
             (1, 1),
+        ];
+    
+        for (dl, dc) in adj {
+            if (dl < 0 && l == 0) ||
+               (dc < 0 && c == 0 ) ||
+               (dl > 0 && l+1 == self.max_l) ||
+               (dc > 0 && c+1 == self.max_c )
+            {} else {
+                let new_l = (dl + (l as i32)) as usize;
+                let new_c = (dc + (c as i32)) as usize;
+                ret.push((new_l, new_c, self.grid[new_l][new_c]));
+            }
+        }
+        ret
+    }
+
+    ///
+    /// Renvoie un vecteur des caractères des 4 cases adjacentes
+    /// (gauche, droite, haut, bas)
+    ///
+    pub fn get_adjacents_ortho(&self, l: usize, c: usize ) -> Vec<(usize, usize, char)> {
+        let mut ret = Vec::new();
+        let adj: [(i32, i32); 4] = [
+            (-1, 0),
+            (0, -1),
+            (0, 1),
+            (1, 0),
         ];
     
         for (dl, dc) in adj {
