@@ -1,0 +1,7 @@
+/target
+assets/*_input.txt
+assets/*test*
+enonces
+src/*test*.rs
+.vscode/launch.json
+scripts/cookie.txt
