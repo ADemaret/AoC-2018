@@ -54,6 +54,7 @@ mod utils;
 // mod day23_part2;
 // mod day24_part1;
 // mod day24_part2;
+// mod day25_part1;
 
 fn main() -> io::Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
@@ -106,6 +107,7 @@ fn main() -> io::Result<()> {
     // day23_part2::main();
     // day24_part1::main();
     // day24_part2::main();
+    // day25_part1::main();
     
     std::process::exit(0);
 }
