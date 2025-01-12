@@ -8,7 +8,7 @@ use std::time::Instant;
 const VERBOSE: bool = false;
 
 pub fn main() {
-    println!("-- Advent of Code - Day 24 - Part 1 --");
+    println!("-- Advent of Code - Day 24 - Part 2 --");
     let now = Instant::now();
 
     // let input = include_str!("../assets/day24_input_demo1.txt");
@@ -47,9 +47,39 @@ struct Group {
 }
 
 fn get_answer(input: &str) -> Option<usize> {
+    let mut min_boost = 0;
+    let mut max_boost = 2000;
+    let mut mid_boost = ((max_boost - min_boost) / 2) + min_boost;
+    if VERBOSE {
+        println!("=> {}-{}", min_boost, max_boost);
+    }
+    let mut result = 0;
+    while max_boost - min_boost > 0 {
+        let (nbr, winner) = fight(input, mid_boost);
+        if winner == Side::Imm {
+            if VERBOSE {
+                print!("at {mid_boost}, we win ({})", nbr);
+            }
+            max_boost = mid_boost;
+            result = nbr;
+        } else {
+            if VERBOSE {
+                print!("at {mid_boost}, we loose");
+            }
+            min_boost = mid_boost + 1;
+        }
+        if VERBOSE {
+            println!("=> {}-{}", min_boost, max_boost);
+        }
+        mid_boost = ((max_boost - min_boost) / 2) + min_boost;
+    }
+    Some(result)
+}
+
+fn fight(input: &str, boost: usize) -> (usize, Side) {
     let (imm, inf) = input.split_once("\n\n").unwrap();
-    let mut groups = get_groups(imm, Side::Imm);
-    groups.append(&mut get_groups(inf, Side::Inf));
+    let mut groups = get_groups(imm, Side::Imm, boost);
+    groups.append(&mut get_groups(inf, Side::Inf, boost));
     set_ids(&mut groups);
 
     let mut round = 1;
@@ -73,15 +103,24 @@ fn get_answer(input: &str) -> Option<usize> {
         //
         // target selection
         //
-        if VERBOSE { println!("target selection :");}
-        let sorted_groups = sort_groups_by_power(&groups);
-        if sorted_groups.is_empty() {
-            break;
+        if VERBOSE {
+            println!("target selection :");
         }
-        for att_id in &sorted_groups {
+        let sorted_groups = sort_groups_by_power(&groups);
+        if sorted_groups.0.is_empty() {
+            return (
+                groups
+                    .iter()
+                    .filter(|gr| gr.units > 0)
+                    .map(|gr| gr.units)
+                    .sum(),
+                sorted_groups.1,
+            );
+        }
+        for att_id in &sorted_groups.0 {
             let mut worst_damage = 0;
             let mut worst_power = 0;
-            for def_id in &sorted_groups {
+            for def_id in &sorted_groups.0 {
                 if att_id != def_id
                     && groups[*att_id].units > 0
                     && groups[*def_id].units > 0
@@ -94,12 +133,12 @@ fn get_answer(input: &str) -> Option<usize> {
 
                     if VERBOSE {
                         println!(
-                        "{:?} {} would deal def gr {}({}) {} damage",
-                        groups[*att_id].side,
-                        groups[*att_id].nice_id,
-                        groups[*def_id].nice_id,
-                        groups[*def_id].id,
-                        damage
+                            "{:?} {} would deal def gr {}({}) {} damage",
+                            groups[*att_id].side,
+                            groups[*att_id].nice_id,
+                            groups[*def_id].nice_id,
+                            groups[*def_id].id,
+                            damage
                         );
                     }
 
@@ -116,13 +155,13 @@ fn get_answer(input: &str) -> Option<usize> {
 
             if VERBOSE {
                 if let Some(def) = groups[*att_id].attacks {
-                println!(
-                    " => target will be {:?} {}",
-                    groups[def].side, groups[def].nice_id
-                );
-            }}
-        }            
-        
+                    println!(
+                        " => target will be {:?} {}",
+                        groups[def].side, groups[def].nice_id
+                    );
+                }
+            }
+        }
         if VERBOSE {
             println!("-");
         }
@@ -143,21 +182,21 @@ fn get_answer(input: &str) -> Option<usize> {
                 // println!(" strongness : {}", strongness);
                 let damage = get_damage(&groups, att_id, attacks);
                 if damage > 0 {
-                // println!(" damage : {}",damage);
-                // println!(" diff = {}", strongness - damage as isize);
+                    // println!(" damage : {}",damage);
+                    // println!(" diff = {}", strongness - damage as isize);
                     let not_killed = ((strongness as f32 - damage as f32)
                         / groups[attacks].hit as f32)
-                    .ceil() as usize;
-                // println!(
-                //     " not killed = {} => {}",
-                //     (strongness as f32 - damage as f32) / groups[attacks].hit as f32,
-                //     not_killed
-                // );
-                // println!(" killed = {}", groups[attacks].units - not_killed);
-                let kills = groups[attacks].units - not_killed;
+                        .ceil() as usize;
+                    // println!(
+                    //     " not killed = {} => {}",
+                    //     (strongness as f32 - damage as f32) / groups[attacks].hit as f32,
+                    //     not_killed
+                    // );
+                    // println!(" killed = {}", groups[attacks].units - not_killed);
+                    let kills = groups[attacks].units - not_killed;
                     if VERBOSE {
                         println!(
-                    "{:?} {} attacks group {}, killing {} units",
+                            "{:?} {} attacks group {}, killing {} units",
                             groups[att_id].side,
                             groups[att_id].nice_id,
                             groups[attacks].nice_id,
@@ -166,31 +205,26 @@ fn get_answer(input: &str) -> Option<usize> {
                     }
                     total_kills += kills;
 
-                if groups[attacks].units > kills {
-                    groups[attacks].units -= kills;
-                } else {
-                    groups[attacks].units = 0;
+                    if groups[attacks].units > kills {
+                        groups[attacks].units -= kills;
+                    } else {
+                        groups[attacks].units = 0;
                     }
                 }
             }
             groups[att_id].attacks = None;
         }
         if total_kills == 0 {
-            println!("no more kills");
-            return Some(0);
-        }        
+            if VERBOSE {
+                println!("no more kills");
+            }
+            return (0, Side::Inf);
+        }
         if VERBOSE {
             println!("-");
         }
         round += 1;
     }
-    Some(
-        groups
-            .iter()
-            .filter(|gr| gr.units > 0)
-            .map(|gr| gr.units)
-            .sum(),
-    )
 }
 
 fn is_not_yet_attacked(groups: &[Group], id: usize) -> bool {
@@ -216,7 +250,7 @@ fn get_damage(groups: &[Group], att_id: usize, def_id: usize) -> usize {
     damage
 }
 
-fn sort_groups_by_power(groups: &[Group]) -> Vec<usize> {
+fn sort_groups_by_power(groups: &[Group]) -> (Vec<usize>, Side) {
     let mut sorted_groups = Vec::new();
     let mut v = Vec::new();
     for gr in groups {
@@ -242,10 +276,10 @@ fn sort_groups_by_power(groups: &[Group]) -> Vec<usize> {
     }
     if imm_army == 0 {
         // println!("war is lost");
-        return Vec::new();
+        return (Vec::new(), Side::Inf);
     } else if inf_army == 0 {
         // println!("war is won");
-        return Vec::new();
+        return (Vec::new(), Side::Imm);
     }
 
     if imm_army > inf_army {
@@ -274,7 +308,7 @@ fn sort_groups_by_power(groups: &[Group]) -> Vec<usize> {
         }
     }
     // println!("{:?}", sorted_groups);
-    sorted_groups
+    (sorted_groups, Side::Imm)
 }
 
 fn sort_groups_by_initiative(groups: &[Group]) -> Vec<usize> {
@@ -312,7 +346,7 @@ fn set_ids(groups: &mut [Group]) {
     }
 }
 
-fn get_groups(lines: &str, side: Side) -> Vec<Group> {
+fn get_groups(lines: &str, side: Side, boost: usize) -> Vec<Group> {
     lines
         .lines()
         .skip(1)
@@ -322,6 +356,10 @@ fn get_groups(lines: &str, side: Side) -> Vec<Group> {
                 .filter(|&x| !x.is_empty())
                 .collect::<Vec<_>>();
             // println!("{:?}", chunks);
+            let mut attack = chunks[chunks.len() - 6].parse::<usize>().unwrap();
+            if side == Side::Imm {
+                attack += boost;
+            }
             Group {
                 side,
                 units: chunks[0].parse::<usize>().unwrap(),
@@ -329,7 +367,7 @@ fn get_groups(lines: &str, side: Side) -> Vec<Group> {
                 init: chunks[chunks.len() - 1].parse::<usize>().unwrap(),
                 immun: get_properties(&chunks, "immune"),
                 weak: get_properties(&chunks, "weak"),
-                attack: chunks[chunks.len() - 6].parse::<usize>().unwrap(),
+                attack,
                 attacktype: chunks[chunks.len() - 5].to_string(),
                 ..Default::default()
             }
@@ -360,11 +398,11 @@ mod tests {
     fn test_total() {
         assert_eq!(
             get_answer(include_str!("../assets/day24_input_demo1.txt")),
-            Some(5216)
+            Some(51)
         );
         assert_eq!(
             get_answer(include_str!("../assets/day24_input.txt")),
-            Some(38008)
+            Some(4009)
         );
     }
 }
